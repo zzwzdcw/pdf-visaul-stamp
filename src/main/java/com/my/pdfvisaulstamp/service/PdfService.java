@@ -6,10 +6,12 @@ import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
+import com.my.pdfvisaulstamp.vo.PointVo;
 import com.my.pdfvisaulstamp.vo.StampVo;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
+import java.util.List;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -95,6 +97,7 @@ public class PdfService {
     }
 
     public String stamp(StampVo stampVo) {
+        List <PointVo> pointVOList = stampVo.getPointVoList();
         String orginPath = "";
         int width,height;
         String imagePath = BASE_PATH + "stamp1.png";
@@ -116,9 +119,11 @@ public class PdfService {
         try {
             pdfDocument = new PdfDocument(new PdfReader(orginPath), new PdfWriter(outPath));
             com.itextpdf.layout.element.Image image = new Image(ImageDataFactory.createPng(imgBytes));
-            image.setFixedPosition(1, (float) stampVo.getX(), (float) stampVo.getY());
             Document document = new Document(pdfDocument);
-            document.add(image);
+            for (PointVo point :pointVOList) {
+                image.setFixedPosition(1, (float) point.getX(), (float) point.getY());
+                document.add(image);
+            }
             pdfDocument.close();
         } catch (IOException e) {
             throw new RuntimeException(e);

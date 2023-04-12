@@ -1,4 +1,4 @@
-package com.my.pdfvisaulstamp.pojo;
+package com.my.pdfvisaulstamp.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode
-public class Point {
+public class PointVo {
     double x;
     double y;
 }

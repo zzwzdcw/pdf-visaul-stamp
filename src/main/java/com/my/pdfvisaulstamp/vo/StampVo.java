@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @author zzwzd
  * @create 2023-04-12 12:51
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode
 public class StampVo {
+    List<PointVo> pointVoList;
     double x;
     double y;
     boolean vertical;

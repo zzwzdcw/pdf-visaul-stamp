@@ -1,6 +1,5 @@
 package com.my.pdfvisaulstamp.controller;
 
-import com.my.pdfvisaulstamp.pojo.Point;
 import com.my.pdfvisaulstamp.service.PdfService;
 import com.my.pdfvisaulstamp.vo.Result;
 import com.my.pdfvisaulstamp.vo.StampVo;
