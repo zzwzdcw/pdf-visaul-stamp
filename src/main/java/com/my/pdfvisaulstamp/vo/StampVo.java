@@ -16,5 +16,6 @@ import lombok.NoArgsConstructor;
 public class StampVo {
     double x;
     double y;
-    boolean isVertical;
+    boolean vertical;
+
 }

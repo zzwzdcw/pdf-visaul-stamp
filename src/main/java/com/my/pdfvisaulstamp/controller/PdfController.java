@@ -39,7 +39,7 @@ public class PdfController {
 
     @PostMapping("/stamp")
     public Result<String> stamp(@RequestBody StampVo stampVo) {
-
-        return result.success();
+        System.out.println(stampVo);
+        return result.success(PNG_BASE64 + pdfService.stamp(stampVo));
     }
 }

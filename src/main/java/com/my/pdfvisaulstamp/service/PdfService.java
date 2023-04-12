@@ -1,6 +1,12 @@
 package com.my.pdfvisaulstamp.service;
 
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
+import com.my.pdfvisaulstamp.vo.StampVo;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
@@ -11,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -52,7 +59,7 @@ public class PdfService {
                 // 将字节数组编码成base64字符串
                 String base64 = Base64.getEncoder().encodeToString(bytes);
                 // 将base64字符串拼接到结果字符串中，用逗号分隔
-                result += base64 + ",";
+                result += base64;
             }
             // 关闭pdf文件
             document.close();
@@ -61,7 +68,7 @@ public class PdfService {
             e.printStackTrace();
         }
         // 返回结果字符串，去掉最后一个逗号
-        return result.substring(0, result.length() - 1).trim();
+        return result.trim();
     }
 
 
@@ -87,10 +94,35 @@ public class PdfService {
         return base64;
     }
 
-    public String stamp() {
+    public String stamp(StampVo stampVo) {
+        String orginPath = "";
+        int width,height;
+        String imagePath = BASE_PATH + "stamp1.png";
+        if (stampVo.isVertical()) {
+            width = 595;
+            height = 842;
+            orginPath = BASE_PATH + "vertical.pdf";
+        }else {
+            height = 595;
+            width = 842;
+            orginPath = BASE_PATH + "thwartwise.pdf";
+        }
+        //设置输出路径
+        String outPath = BASE_PATH + "temp/"+ System.currentTimeMillis()+".pdf";
+        String imageBase64 = getBase64(imagePath);
+        byte[] imgBytes = Base64.getDecoder().decode(imageBase64);
 
         PdfDocument pdfDocument;
-        //限制img长宽
-        return "";
+        try {
+            pdfDocument = new PdfDocument(new PdfReader(orginPath), new PdfWriter(outPath));
+            com.itextpdf.layout.element.Image image = new Image(ImageDataFactory.createPng(imgBytes));
+            image.setFixedPosition(1, (float) stampVo.getX(), (float) stampVo.getY());
+            Document document = new Document(pdfDocument);
+            document.add(image);
+            pdfDocument.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return this.pdfToImageBase64(outPath,width,height).trim();
     }
 }
