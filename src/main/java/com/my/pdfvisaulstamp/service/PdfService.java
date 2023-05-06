@@ -1,23 +1,19 @@
 package com.my.pdfvisaulstamp.service;
 
-import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfReader;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Image;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.my.pdfvisaulstamp.vo.PointVo;
 import com.my.pdfvisaulstamp.vo.StampVo;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 
@@ -33,16 +29,18 @@ import javax.imageio.ImageIO;
  */
 @Service
 public class PdfService {
-    private String PNG_BASE64 = "data:image/jpeg;base64,";
     private static String BASE_PATH = System.getProperty("user.dir") + "/src/main/resources/file/";
-    public  BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
+    private String PNG_BASE64 = "data:image/jpeg;base64,";
+
+    public BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
         BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics2D = resizedImage.createGraphics();
         graphics2D.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
         graphics2D.dispose();
         return resizedImage;
     }
-    public  List pdfToImageBase64(String filePath,int targetWidth, int targetHeight) {
+
+    public List pdfToImageBase64(String filePath, int targetWidth, int targetHeight) {
         // 定义一个空的字符串用来存储结果
         ArrayList<String> list = new ArrayList<>();
         try {
@@ -56,7 +54,7 @@ public class PdfService {
             for (int i = 0; i < document.getNumberOfPages(); i++) {
                 // 将每一页渲染成一个BufferedImage对象
                 BufferedImage tempImage = renderer.renderImageWithDPI(i, 180, ImageType.RGB);
-                BufferedImage image =  resizeImage(tempImage, targetWidth, targetHeight);
+                BufferedImage image = resizeImage(tempImage, targetWidth, targetHeight);
                 // 将BufferedImage对象转换成字节数组
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(image, "jpg", baos);
@@ -64,7 +62,7 @@ public class PdfService {
                 // 将字节数组编码成base64字符串
                 String base64 = Base64.getEncoder().encodeToString(bytes);
                 // 将base64字符串拼接到结果字符串中，用逗号分隔
-                list.add(PNG_BASE64+base64.trim());
+                list.add(PNG_BASE64 + base64.trim());
             }
             // 关闭pdf文件
             document.close();
@@ -100,37 +98,44 @@ public class PdfService {
     }
 
     public List stamp(StampVo stampVo) {
-        List <PointVo> pointVOList = stampVo.getPointVoList();
+        List<PointVo> pointVOList = stampVo.getPointVoList();
         String orginPath = "";
-        int width,height;
+        int width, height;
         String imagePath = BASE_PATH + "stamp1.png";
         if (stampVo.isVertical()) {
             width = 595;
             height = 842;
             orginPath = BASE_PATH + "vertical2.pdf";
-        }else {
+        } else {
             height = 595;
             width = 842;
             orginPath = BASE_PATH + "thwartwise2.pdf";
         }
         //设置输出路径
-        String outPath = BASE_PATH + "temp/"+ System.currentTimeMillis()+".pdf";
+        String outPath = BASE_PATH + "temp/" + System.currentTimeMillis() + ".pdf";
         String imageBase64 = getBase64(imagePath);
         byte[] imgBytes = Base64.getDecoder().decode(imageBase64);
-
-        PdfDocument pdfDocument;
+        PdfReader pdfReader = null;
+        PdfStamper pdfStamper = null;
+        OutputStream os = null;
+        Image image = null;
+        PdfContentByte pdfDocument = null;
         try {
-            pdfDocument = new PdfDocument(new PdfReader(orginPath), new PdfWriter(outPath));
-            com.itextpdf.layout.element.Image image = new Image(ImageDataFactory.createPng(imgBytes));
-            Document document = new Document(pdfDocument);
-            for (PointVo point :pointVOList) {
-                image.setFixedPosition(point.getPage(), (float) point.getX(), (float) point.getY());
-                document.add(image);
+            os = new FileOutputStream(outPath);
+            pdfReader = new PdfReader(orginPath);
+            pdfStamper = new PdfStamper(pdfReader, os);
+            image = Image.getInstance(imgBytes);
+            for (PointVo point : pointVOList) {
+                image.setAbsolutePosition((float) point.getX(), (float) point.getY());
+                pdfDocument = pdfStamper.getOverContent(point.getPage());
+                pdfDocument.addImage(image);
             }
-            pdfDocument.close();
-        } catch (IOException e) {
+            pdfStamper.close();
+            os.close();
+            pdfReader.close();
+        } catch (IOException | DocumentException e) {
             throw new RuntimeException(e);
         }
-        return this.pdfToImageBase64(outPath,width,height);
+        return this.pdfToImageBase64(outPath, width, height);
     }
 }
