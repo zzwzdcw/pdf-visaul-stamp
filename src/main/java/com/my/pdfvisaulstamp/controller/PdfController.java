@@ -6,6 +6,7 @@ import com.my.pdfvisaulstamp.vo.StampVo;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author zzwzd
@@ -23,22 +24,22 @@ public class PdfController {
 
     private String PNG_BASE64 = "data:image/jpeg;base64,";
     @GetMapping("/thwartwise")
-    public Result<String> getThwartwisePdfBase64() {
-        String path = BASE_PATH+"thwartwise.pdf";
+    public Result<List> getThwartwisePdfBase64() {
+        String path = BASE_PATH+"thwartwise2.pdf";
         System.out.println(path);
-        return result.success(PNG_BASE64 + pdfService.pdfToImageBase64(path,842,595));
+        return result.success( pdfService.pdfToImageBase64(path,842,595));
     }
 
     @GetMapping("/vertical")
-    public Result<String> getVerticalPdfBase64() {
-        String path = BASE_PATH+"vertical.pdf";
+    public Result<List> getVerticalPdfBase64() {
+        String path = BASE_PATH+"vertical2.pdf";
         System.out.println(path);
-        return result.success(PNG_BASE64 + pdfService.pdfToImageBase64(path,595,842));
+        return result.success(pdfService.pdfToImageBase64(path,595,842));
     }
 
     @PostMapping("/stamp")
-    public Result<String> stamp(@RequestBody StampVo stampVo) {
+    public Result<List> stamp(@RequestBody StampVo stampVo) {
         System.out.println(stampVo);
-        return result.success(PNG_BASE64 + pdfService.stamp(stampVo));
+        return result.success(pdfService.stamp(stampVo));
     }
 }

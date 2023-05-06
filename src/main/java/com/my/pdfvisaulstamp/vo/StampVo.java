@@ -17,8 +17,5 @@ import java.util.List;
 @EqualsAndHashCode
 public class StampVo {
     List<PointVo> pointVoList;
-    double x;
-    double y;
     boolean vertical;
-
 }
