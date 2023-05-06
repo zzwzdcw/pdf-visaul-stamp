@@ -16,4 +16,5 @@ import lombok.NoArgsConstructor;
 public class PointVo {
     double x;
     double y;
+    int page;
 }

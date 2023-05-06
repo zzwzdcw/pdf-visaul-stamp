@@ -11,6 +11,7 @@ import com.my.pdfvisaulstamp.vo.StampVo;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +33,7 @@ import javax.imageio.ImageIO;
  */
 @Service
 public class PdfService {
+    private String PNG_BASE64 = "data:image/jpeg;base64,";
     private static String BASE_PATH = System.getProperty("user.dir") + "/src/main/resources/file/";
     public  BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
         BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
@@ -40,9 +42,9 @@ public class PdfService {
         graphics2D.dispose();
         return resizedImage;
     }
-    public  String pdfToImageBase64(String filePath,int targetWidth, int targetHeight) {
+    public  List pdfToImageBase64(String filePath,int targetWidth, int targetHeight) {
         // 定义一个空的字符串用来存储结果
-        String result = "";
+        ArrayList<String> list = new ArrayList<>();
         try {
             // 打开pdf文件
             File file = new File(filePath);
@@ -50,6 +52,7 @@ public class PdfService {
             // 创建一个PDFRenderer对象
             PDFRenderer renderer = new PDFRenderer(document);
             // 遍历pdf的每一页
+
             for (int i = 0; i < document.getNumberOfPages(); i++) {
                 // 将每一页渲染成一个BufferedImage对象
                 BufferedImage tempImage = renderer.renderImageWithDPI(i, 180, ImageType.RGB);
@@ -61,7 +64,7 @@ public class PdfService {
                 // 将字节数组编码成base64字符串
                 String base64 = Base64.getEncoder().encodeToString(bytes);
                 // 将base64字符串拼接到结果字符串中，用逗号分隔
-                result += base64;
+                list.add(PNG_BASE64+base64.trim());
             }
             // 关闭pdf文件
             document.close();
@@ -70,7 +73,7 @@ public class PdfService {
             e.printStackTrace();
         }
         // 返回结果字符串，去掉最后一个逗号
-        return result.trim();
+        return list;
     }
 
 
@@ -96,7 +99,7 @@ public class PdfService {
         return base64;
     }
 
-    public String stamp(StampVo stampVo) {
+    public List stamp(StampVo stampVo) {
         List <PointVo> pointVOList = stampVo.getPointVoList();
         String orginPath = "";
         int width,height;
@@ -104,11 +107,11 @@ public class PdfService {
         if (stampVo.isVertical()) {
             width = 595;
             height = 842;
-            orginPath = BASE_PATH + "vertical.pdf";
+            orginPath = BASE_PATH + "vertical2.pdf";
         }else {
             height = 595;
             width = 842;
-            orginPath = BASE_PATH + "thwartwise.pdf";
+            orginPath = BASE_PATH + "thwartwise2.pdf";
         }
         //设置输出路径
         String outPath = BASE_PATH + "temp/"+ System.currentTimeMillis()+".pdf";
@@ -121,13 +124,13 @@ public class PdfService {
             com.itextpdf.layout.element.Image image = new Image(ImageDataFactory.createPng(imgBytes));
             Document document = new Document(pdfDocument);
             for (PointVo point :pointVOList) {
-                image.setFixedPosition(1, (float) point.getX(), (float) point.getY());
+                image.setFixedPosition(point.getPage(), (float) point.getX(), (float) point.getY());
                 document.add(image);
             }
             pdfDocument.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return this.pdfToImageBase64(outPath,width,height).trim();
+        return this.pdfToImageBase64(outPath,width,height);
     }
 }
