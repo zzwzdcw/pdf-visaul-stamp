@@ -42,4 +42,10 @@ public class PdfController {
         System.out.println(stampVo);
         return result.success(pdfService.stamp(stampVo));
     }
+
+    @PostMapping("/sign")
+    public Result<List> sign(@RequestBody StampVo stampVo) {
+        System.out.println(stampVo);
+        return result.success(pdfService.sign(stampVo));
+    }
 }
