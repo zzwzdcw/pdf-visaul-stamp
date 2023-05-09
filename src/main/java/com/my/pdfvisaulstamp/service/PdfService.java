@@ -133,4 +133,40 @@ public class PdfService {
         }
         return this.pdfToImageBase64(outPath,width,height);
     }
+
+    public List sign(StampVo stampVo) {
+        List <PointVo> pointVOList = stampVo.getPointVoList();
+        String orginPath = "";
+        int width,height;
+        String imagePath = BASE_PATH + "testImage.png";
+        if (stampVo.isVertical()) {
+            width = 595;
+            height = 842;
+            orginPath = BASE_PATH + "vertical2.pdf";
+        }else {
+            height = 595;
+            width = 842;
+            orginPath = BASE_PATH + "thwartwise2.pdf";
+        }
+        //设置输出路径
+        String outPath = BASE_PATH + "temp/"+ System.currentTimeMillis()+".pdf";
+        String imageBase64 = getBase64(imagePath);
+        byte[] imgBytes = Base64.getDecoder().decode(imageBase64);
+
+        PdfDocument pdfDocument;
+        try {
+            pdfDocument = new PdfDocument(new PdfReader(orginPath), new PdfWriter(outPath));
+            com.itextpdf.layout.element.Image image = new Image(ImageDataFactory.createPng(imgBytes));
+            Document document = new Document(pdfDocument);
+            for (PointVo point :pointVOList) {
+                image.scaleAbsolute(100,30);
+                image.setFixedPosition(point.getPage(), (float) point.getX(), (float) point.getY());
+                document.add(image);
+            }
+            pdfDocument.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return this.pdfToImageBase64(outPath,width,height);
+    }
 }
