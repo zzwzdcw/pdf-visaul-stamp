@@ -17,4 +17,5 @@ public class PointVo {
     double x;
     double y;
     int page;
+    String type;
 }

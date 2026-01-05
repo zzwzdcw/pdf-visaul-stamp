@@ -48,4 +48,11 @@ public class PdfController {
         System.out.println(stampVo);
         return result.success(pdfService.sign(stampVo));
     }
+
+    @PostMapping("/unionStamp")
+    public Result<List> unionStamp(@RequestBody StampVo stampVo) {
+        System.out.println(stampVo);
+        return result.success(pdfService.unionStamp(stampVo));
+    }
+
 }

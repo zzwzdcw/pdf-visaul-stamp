@@ -181,4 +181,66 @@ public class PdfService {
         }
         return this.pdfToImageBase64(outPath, width, height);
     }
+
+    public List unionStamp(StampVo stampVo) {
+        List<PointVo> pointVOList = stampVo.getPointVoList();
+        String orginPath = "";
+        int width, height;
+
+        // 根据方向设置基础参数
+        if (stampVo.isVertical()) {
+            width = 595;
+            height = 842;
+            orginPath = BASE_PATH + "vertical2.pdf";
+        } else {
+            height = 595;
+            width = 842;
+            orginPath = BASE_PATH + "thwartwise2.pdf";
+        }
+
+        // 设置输出路径
+        String outPath = BASE_PATH + "temp/" + System.currentTimeMillis() + ".pdf";
+
+        PdfReader pdfReader = null;
+        PdfStamper pdfStamper = null;
+        OutputStream os = null;
+        PdfContentByte pdfDocument = null;
+
+        try {
+            os = new FileOutputStream(outPath);
+            pdfReader = new PdfReader(orginPath);
+            pdfStamper = new PdfStamper(pdfReader, os);
+
+            for (PointVo point : pointVOList) {
+                // 根据type选择不同的图片和设置
+                String imagePath;
+                if ("word".equals(point.getType())) {
+                    imagePath = BASE_PATH + "testImage.png";
+                } else {
+                    imagePath = BASE_PATH + "stamp1.png"; // 默认使用stamp图片
+                }
+
+                String imageBase64 = getBase64(imagePath);
+                byte[] imgBytes = Base64.getDecoder().decode(imageBase64);
+                Image image = Image.getInstance(imgBytes);
+
+                // 如果是photo类型，应用缩放
+                if ("word".equals(point.getType())) {
+                    image.scaleAbsolute(100, 30);
+                }
+
+                image.setAbsolutePosition((float) point.getX(), (float) point.getY());
+                pdfDocument = pdfStamper.getOverContent(point.getPage());
+                pdfDocument.addImage(image);
+            }
+
+            pdfStamper.close();
+            os.close();
+            pdfReader.close();
+        } catch (IOException | DocumentException e) {
+            throw new RuntimeException(e);
+        }
+
+        return this.pdfToImageBase64(outPath, width, height);
+    }
 }
